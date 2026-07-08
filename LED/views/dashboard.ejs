@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/terminal.css">
+    <title>LED | DASHBOARD</title>
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    
+    <div class="dashboard-wrapper">
+        
+        <!-- SIDE NAVIGATION -->
+        <nav style="width: 250px; border-right: 2px solid #005f73; padding: 20px; background: rgba(0, 15, 30, 0.95); flex-shrink: 0; min-height: 100vh;">
+            <h2 style="color: #00d4ff; margin-bottom: 5px;">LED MENU</h2>
+            <p style="font-size: 0.7em; margin-bottom: 20px; opacity: 0.7;">PRECINCT 15-701</p>
+            <hr style="border: 0; border-top: 1px solid #005f73; margin-bottom: 20px;">
+            
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 20px;">
+                    <a href="/dashboard?tab=inventory" 
+                       class="<%= (typeof activeTab !== 'undefined' && activeTab === 'inventory') ? 'nav-item-active' : 'nav-item-inactive' %>" 
+                       style="text-decoration: none; font-weight: bold; display: block;">
+                        [#] ARMORY INVENTORY
+                    </a>
+                </li>
+                <li style="margin-bottom: 20px;">
+                    <a href="/dashboard?tab=officers" 
+                       class="<%= (typeof activeTab !== 'undefined' && activeTab === 'officers') ? 'nav-item-active' : 'nav-item-inactive' %>" 
+                       style="text-decoration: none; font-weight: bold; display: block;">
+                        [#] OFFICER ROSTER
+                    </a>
+                </li>
+                <li style="margin-top: 50px;">
+                    <a href="/" style="color: #ff4d4d; text-decoration: none; font-weight: bold; display: block;">[!] LOGOUT</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- MAIN CONTENT AREA -->
+        <main style="flex: 1; padding: 30px; overflow-y: auto;">
+            <header class="module-header">
+                <h1 style="margin: 0;">LED v1.0 - <%= (typeof activeTab !== 'undefined' ? activeTab.toUpperCase() : 'SYSTEM') %></h1>
+                <p style="margin: 5px 0; font-size: 0.9em;">OPERATOR: <%= adminName %> | CLEARANCE: ADMIN</p>
+            </header>
+
+            <div class="main-content" style="display: flex; flex-direction: column; gap: 30px;">
+                
+                <% if (typeof activeTab !== 'undefined' && activeTab === 'inventory') { %>
+                    <section class="module-border">
+                        <h3>[ EQUIPMENT STATUS ]</h3>
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr><th>TAG</th><th>ITEM</th><th>STATUS</th><th>ASSIGNED TO</th></tr>
+                            </thead>
+                            <tbody>
+                                <% inventory.forEach(item => { %>
+                                    <tr>
+                                        <td><%= item.asset_tag %></td>
+                                        <td><%= item.item_name %></td>
+                                        <td class="<%= item.status === 'Maintenance' ? 'status-maintenance' : (item.status === 'Deployed' ? 'status-deployed' : 'status-available') %>">
+                                            <%= item.status %>
+                                        </td>
+                                        <td><%= item.assigned_to || '---' %></td>
+                                    </tr>
+                                <% }); %> <!-- Closing forEach -->
+                            </tbody>
+                        </table>
+                    </section>
+                <% } %> <!-- Closing if inventory -->
+
+                <% if (typeof activeTab !== 'undefined' && activeTab === 'officers') { %>
+                    <section class="module-border">
+                        <h3>[ PERSONNEL DIRECTORY - FULL RECORDS ]</h3>
+
+                        <button id="openModal" class="btn-add">
+                            <span>+</span> Recruit New Officer
+                        </button>
+
+                        <div id="officerModal" class="modal">
+                            <div class="modal-content">
+                                <span class="close-btn">&times;</span>
+                                <h1 style="text-align: center; letter-spacing: 2px;">RECRUITMENT</h1>
+                                <hr style="border: 0.5px solid rgba(0,0,0,0.1); margin-bottom: 20px;">
+                                
+                                <form action="/add-officer" method="POST">
+                                    <div class="form-grid">
+                                        <!-- Group 1: Identification -->
+                                        <input type="number" name="badge_number" placeholder="BADGE NUMBER" required>
+                                        <input type="text" name="post_id" placeholder="POST ID">
+                                        
+                                        <!-- Group 2: Personal -->
+                                        <input type="text" name="first_name" placeholder="FIRST NAME" required>
+                                        <input type="text" name="last_name" placeholder="LAST NAME" required>
+                                        <input type="date" name="dob" title="Date of Birth" required>
+                                        <input type="email" name="work_email" placeholder="WORK EMAIL" required>
+
+                                        <!-- Group 3: Professional -->
+                                        <input type="text" name="agency_name" placeholder="AGENCY NAME" required>
+                                        <input type="text" name="officer_rank" placeholder="OFFICER RANK">
+                                        <input type="date" name="hire_date" title="HIRE DATE">
+                                        <input type="text" name="unit_division" placeholder="UNIT / DIVISION">
+
+                                        <!-- Security Credentials -->
+                                        <input type="password" name="password" placeholder="TEMPORARY ACCESS CODE" class="full-width" required>
+                                        
+                                        <select name="role" class="full-width">
+                                            <option value="User">Assign Role: User</option>
+                                            <option value="Admin">Assign Role: Admin</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn-add" style="width: 100%; margin-top: 20px; justify-content: center;">
+                                        Finalize Recruitment
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto; width: 100%;">
+                            <table style="width: 100%; text-align: left; border-collapse: collapse; min-width: 1200px;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #00d4ff;">
+                                        <th>BADGE_NUMBER</th><th>POST_ID</th><th>FIRST_NAME</th><th>LAST_NAME</th><th>AGENCY_NAME</th><th>DOB</th><th>WORK_EMAIL</th><th>OFFICER_RANK</th><th>HIRE_DATE</th><th>UNIT_DIVISION</th><th>DUTY_STATUS</th><th>CREATED_BY</th><th>CREATED_AT</th><th>ROLE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% officers.forEach(off => { %>
+                                        <tr>
+                                            <td><%= off.badge_number %></td>
+                                            <td><%= off.post_id %></td>
+                                            <td><%= off.first_name %></td>
+                                            <td><%= off.last_name %></td>
+                                            <td><%= off.agency_name %></td>
+                                            <td><%= off.dob ? new Date(off.dob).toLocaleDateString() : 'N/A' %></td>
+                                            <td><%= off.work_email %></td>
+                                            <td><%= off.officer_rank %></td>
+                                            <td><%= off.hire_date ? new Date(off.hire_date).toLocaleDateString() : 'N/A' %></td>
+                                            <td><%= off.unit_division %></td>
+                                            <td class="<%= off.duty_status === 'Active' ? 'status-available' : 'status-maintenance' %>"><%= off.duty_status %></td>
+                                            <td><%= off.created_by %></td>
+                                            <td><%= off.created_at ? new Date(off.created_at).toLocaleString() : 'N/A' %></td>
+                                            <td><%= off.role %></td>
+                                        </tr>
+                                    <% }); %> <!-- Closing forEach -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                <% } %> <!-- Closing if officers -->
+
+                <section class="module-border">
+                    <h3>[ RECENT LOGS ]</h3>
+                    <div style="font-size: 0.85em; font-family: 'Courier New', monospace;">
+                        <% logs.forEach(log => { %>
+                            <p style="margin: 8px 0; border-bottom: 1px dashed rgba(0, 212, 255, 0.1);">
+                                <span style="color: #888;">[<%= new Date(log.timestamp).toLocaleTimeString() %>]</span> 
+                                <span style="font-weight: bold; color: #00d4ff;"><%= log.action_type %></span>: <%= log.details %>
+                            </p>
+                        <% }); %> <!-- Closing forEach -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const modal = document.getElementById("officerModal");
+        const btn = document.getElementById("openModal");
+        const span = document.getElementsByClassName("close-btn")[0];
+
+        // Open the popup
+        btn.onclick = () => modal.style.display = "block";
+
+        // Close when clicking (x)
+        span.onclick = () => modal.style.display = "none";
+
+        // Close if clicking outside the box
+        window.onclick = (event) => {
+            if (event.target == modal) modal.style.display = "none";
+        }
+    </script>
+</body>
+</html>

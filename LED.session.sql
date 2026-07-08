@@ -1,0 +1,1 @@
+SELECT badge_number, first_name,last_name, post_id FROM officers;
