@@ -1,0 +1,33 @@
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <div class="shield">LED</div>
+        <div>
+            <div class="name">LED</div>
+            <div class="precinct">PRECINCT 15-701</div>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <a href="/dashboard" class="<%= active === 'dashboard' ? 'active' : '' %>"><span class="icon">&#9635;</span> Overview</a>
+        <a href="/officers" class="<%= active === 'officers' ? 'active' : '' %>"><span class="icon">&#9787;</span> Officer Roster</a>
+        <a href="/equipment" class="<%= active === 'equipment' ? 'active' : '' %>"><span class="icon">&#9878;</span> Armory</a>
+        <a href="/reports" class="<%= active === 'reports' ? 'active' : '' %>"><span class="icon">&#9998;</span> Incident Reports</a>
+
+        <div class="nav-section-label">Emergency</div>
+        <% if (typeof codeRed !== 'undefined' && codeRed && codeRed.active) { %>
+            <form action="/code-red/resolve" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-block code-red-link">&#9888; Resolve Code Red</button>
+            </form>
+        <% } else { %>
+            <form action="/code-red/activate" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-block code-red-link">&#9888; Activate Code Red</button>
+            </form>
+        <% } %>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="/logout">&#8592; Log Out</a>
+    </div>
+</nav>

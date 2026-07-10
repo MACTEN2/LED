@@ -1,0 +1,76 @@
+<%- include('partials/shell-top', { pageTitle: 'Officer Profile', active: 'officers' }) %>
+
+<section class="panel">
+    <div class="panel-header">
+        <h3 class="mt-0"><%= officer.first_name %> <%= officer.last_name %> &mdash; #<%= officer.badge_number %></h3>
+        <% if (role === 'Admin') { %>
+            <a class="btn btn-sm" href="/officers/<%= officer.badge_number %>/edit">Edit</a>
+        <% } %>
+    </div>
+
+    <div class="report-meta">
+        <div><div class="k">Rank</div><div class="v"><%= officer.officer_rank || '&mdash;' %></div></div>
+        <div><div class="k">Unit / Division</div><div class="v"><%= officer.unit_division || '&mdash;' %></div></div>
+        <div><div class="k">Agency</div><div class="v"><%= officer.agency_name %></div></div>
+        <div><div class="k">Work Email</div><div class="v"><%= officer.work_email %></div></div>
+        <div><div class="k">Duty Status</div><div class="v"><span class="pill pill-<%= officer.duty_status ? officer.duty_status.toLowerCase() : 'active' %>"><%= officer.duty_status %></span></div></div>
+        <div><div class="k">Role</div><div class="v"><span class="pill <%= officer.role === 'Admin' ? 'pill-admin' : 'pill-user' %>"><%= officer.role %></span></div></div>
+        <div><div class="k">Hire Date</div><div class="v"><%= officer.hire_date ? new Date(officer.hire_date).toLocaleDateString() : 'N/A' %></div></div>
+        <div><div class="k">Created By</div><div class="v"><%= officer.created_by || '&mdash;' %></div></div>
+    </div>
+
+    <% if (role === 'Admin') { %>
+        <form action="/officers/<%= officer.badge_number %>/status" method="POST" class="toolbar" data-confirm="Change duty status for this officer?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <select name="duty_status">
+                <option value="Active" <%= officer.duty_status === 'Active' ? 'selected' : '' %>>Active</option>
+                <option value="Inactive" <%= officer.duty_status === 'Inactive' ? 'selected' : '' %>>Inactive</option>
+                <option value="Terminated" <%= officer.duty_status === 'Terminated' ? 'selected' : '' %>>Terminated</option>
+            </select>
+            <button type="submit" class="btn btn-sm">Update Status</button>
+        </form>
+    <% } %>
+</section>
+
+<section class="panel">
+    <h3>Currently Checked Out</h3>
+    <% if (checkouts.length === 0) { %>
+        <p class="empty-state">No equipment currently checked out.</p>
+    <% } else { %>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Asset Tag</th><th>Item</th><th>Checked Out</th></tr></thead>
+                <tbody>
+                    <% checkouts.forEach(c => { %>
+                        <tr><td><%= c.asset_tag %></td><td><%= c.item_name %></td><td><%= new Date(c.checked_out_at).toLocaleString() %></td></tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</section>
+
+<section class="panel">
+    <h3>Reports Involved In</h3>
+    <% if (reports.length === 0) { %>
+        <p class="empty-state">No reports tagged to this officer.</p>
+    <% } else { %>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Report #</th><th>Title</th><th>Occurred</th><th>Status</th></tr></thead>
+                <tbody>
+                    <% reports.forEach(r => { %>
+                        <tr>
+                            <td><a href="/reports/<%= r.id %>"><%= r.report_number %></a></td>
+                            <td><%= r.title %></td>
+                            <td><%= new Date(r.occurred_at).toLocaleString() %></td>
+                            <td><span class="pill pill-<%= r.status.toLowerCase().replace(' ', '-') %>"><%= r.status %></span></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</section>
+
+<%- include('partials/shell-bottom') %>

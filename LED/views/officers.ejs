@@ -1,0 +1,85 @@
+<%- include('partials/shell-top', { pageTitle: 'Officer Roster', active: 'officers' }) %>
+
+<section class="panel">
+    <div class="panel-header">
+        <h3 class="mt-0">Personnel Directory</h3>
+        <% if (role === 'Admin') { %>
+            <button class="btn btn-primary" data-modal-open="addOfficerModal"><span>+</span> Recruit New Officer</button>
+        <% } %>
+    </div>
+
+    <form class="toolbar" method="GET" action="/officers">
+        <input type="text" name="q" value="<%= search %>" placeholder="Search name, badge, unit...">
+        <select name="duty_status">
+            <option value="">All Statuses</option>
+            <option value="Active" <%= dutyStatus === 'Active' ? 'selected' : '' %>>Active</option>
+            <option value="Inactive" <%= dutyStatus === 'Inactive' ? 'selected' : '' %>>Inactive</option>
+            <option value="Terminated" <%= dutyStatus === 'Terminated' ? 'selected' : '' %>>Terminated</option>
+        </select>
+        <button type="submit" class="btn btn-sm">Filter</button>
+    </form>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Badge</th><th>Name</th><th>Rank</th><th>Unit</th><th>Status</th><th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (officers.length === 0) { %>
+                    <tr><td colspan="6" class="empty-state">No officers match this search.</td></tr>
+                <% } %>
+                <% officers.forEach(off => { %>
+                    <tr>
+                        <td><%= off.badge_number %></td>
+                        <td><a href="/officers/<%= off.badge_number %>"><%= off.first_name %> <%= off.last_name %></a></td>
+                        <td><%= off.officer_rank || '&mdash;' %></td>
+                        <td><%= off.unit_division || '&mdash;' %></td>
+                        <td><span class="pill pill-<%= off.duty_status ? off.duty_status.toLowerCase() : 'active' %>"><%= off.duty_status %></span></td>
+                        <td><span class="pill <%= off.role === 'Admin' ? 'pill-admin' : 'pill-user' %>"><%= off.role %></span></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<% if (role === 'Admin') { %>
+<div id="addOfficerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="mt-0">Recruit New Officer</h2>
+            <button class="close-btn" data-modal-close>&times;</button>
+        </div>
+        <form action="/officers" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-grid">
+                <div class="field"><label>Badge Number</label><input type="number" name="badge_number" required></div>
+                <div class="field"><label>Post ID</label><input type="text" name="post_id"></div>
+                <div class="field"><label>First Name</label><input type="text" name="first_name" required></div>
+                <div class="field"><label>Last Name</label><input type="text" name="last_name" required></div>
+                <div class="field"><label>Date of Birth</label><input type="date" name="dob" required></div>
+                <div class="field"><label>Work Email</label><input type="email" name="work_email" required></div>
+                <div class="field"><label>Agency Name</label><input type="text" name="agency_name" required value="Federal Bureau of Investigation"></div>
+                <div class="field"><label>Rank</label><input type="text" name="officer_rank"></div>
+                <div class="field"><label>Hire Date</label><input type="date" name="hire_date"></div>
+                <div class="field"><label>Unit / Division</label><input type="text" name="unit_division"></div>
+                <div class="field full-width"><label>Temporary Access Code</label><input type="password" name="password" required minlength="8"></div>
+                <div class="field full-width">
+                    <label>Role</label>
+                    <select name="role">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-block">Finalize Recruitment</button>
+            </div>
+        </form>
+    </div>
+</div>
+<% } %>
+
+<%- include('partials/shell-bottom') %>

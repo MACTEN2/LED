@@ -1,22 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="/css/terminal.css">
-    <title>LED | AUTHENTICATION</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <title>LED | Authentication</title>
 </head>
 <body>
-    <div class="crt-overlay"></div>
-    <div class="login-box">
-        <h1>LED SYSTEM LOGIN</h1>
-        <form action="/login" method="POST">
-            <label>ENTER BADGE NUMBER:</label>
-            <input type="text" name="badge_number" required placeholder="00000" autofocus>
-            
-            <label>ENTER ACCESS CODE:</label>
-            <input type="password" name="password" required placeholder="********">
-            
-            <button type="submit">AUTHENTICATE</button>
-        </form>
+    <div class="login-shell">
+        <div class="login-box">
+            <div class="login-badge">
+                <div class="shield">LED</div>
+                <div>
+                    <div class="title">LED System Login</div>
+                    <div class="subtitle">Precinct 15-701</div>
+                </div>
+            </div>
+
+            <%- include('partials/flash') %>
+
+            <form action="/login" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="field">
+                    <label>Badge Number</label>
+                    <input type="text" name="badge_number" required placeholder="00000" autofocus>
+                </div>
+                <div class="field">
+                    <label>Access Code</label>
+                    <input type="password" name="password" required placeholder="********">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Authenticate</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

@@ -1,0 +1,108 @@
+<%- include('partials/shell-top', { pageTitle: 'Armory', active: 'equipment' }) %>
+
+<section class="panel">
+    <div class="panel-header">
+        <h3 class="mt-0">Equipment &amp; Weapons Inventory</h3>
+        <% if (role === 'Admin') { %>
+            <button class="btn btn-primary" data-modal-open="addEquipmentModal"><span>+</span> Register Item</button>
+        <% } %>
+    </div>
+
+    <form class="toolbar" method="GET" action="/equipment">
+        <input type="text" name="q" value="<%= search %>" placeholder="Search tag, name, serial, category...">
+        <select name="status">
+            <option value="">All Statuses</option>
+            <option value="Available" <%= status === 'Available' ? 'selected' : '' %>>Available</option>
+            <option value="Deployed" <%= status === 'Deployed' ? 'selected' : '' %>>Deployed</option>
+            <option value="Maintenance" <%= status === 'Maintenance' ? 'selected' : '' %>>Maintenance</option>
+        </select>
+        <button type="submit" class="btn btn-sm">Filter</button>
+    </form>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Tag</th><th>Item</th><th>Category</th><th>Serial</th><th>Status</th><th>Assigned To</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                <% if (inventory.length === 0) { %>
+                    <tr><td colspan="7" class="empty-state">No equipment matches this search.</td></tr>
+                <% } %>
+                <% inventory.forEach(item => { %>
+                    <tr>
+                        <td><%= item.asset_tag %></td>
+                        <td><%= item.item_name %></td>
+                        <td><%= item.category || '&mdash;' %></td>
+                        <td><%= item.serial_number || '&mdash;' %></td>
+                        <td><span class="pill pill-<%= item.status.toLowerCase() %>"><%= item.status %></span></td>
+                        <td><%= item.assigned_to || '&mdash;' %></td>
+                        <td>
+                            <% if (item.status === 'Available') { %>
+                                <form action="/equipment/<%= item.asset_tag %>/checkout" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="btn btn-sm">Check Out</button>
+                                </form>
+                            <% } else if (item.status === 'Deployed') { %>
+                                <form action="/equipment/<%= item.asset_tag %>/checkin" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="btn btn-sm">Check In</button>
+                                </form>
+                            <% } %>
+                            <% if (role === 'Admin') { %>
+                                <a class="btn btn-sm btn-ghost" href="/equipment/<%= item.asset_tag %>/edit">Edit</a>
+                                <% if (item.status !== 'Maintenance') { %>
+                                    <form action="/equipment/<%= item.asset_tag %>/maintenance" method="POST" data-confirm="Flag this item for maintenance?">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <button type="submit" class="btn btn-sm btn-danger">Flag</button>
+                                    </form>
+                                <% } %>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<% if (role === 'Admin') { %>
+<div id="addEquipmentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="mt-0">Register Armory Item</h2>
+            <button class="close-btn" data-modal-close>&times;</button>
+        </div>
+        <form action="/equipment" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-grid">
+                <div class="field"><label>Asset Tag</label><input type="text" name="asset_tag" required></div>
+                <div class="field"><label>Item Name</label><input type="text" name="item_name" required></div>
+                <div class="field">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="Firearm">Firearm</option>
+                        <option value="Vehicle">Vehicle</option>
+                        <option value="Comm Device">Comm Device</option>
+                        <option value="Protective Gear">Protective Gear</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field"><label>Serial Number</label><input type="text" name="serial_number"></div>
+                <div class="field"><label>Caliber (if applicable)</label><input type="text" name="caliber"></div>
+                <div class="field">
+                    <label>Initial Status</label>
+                    <select name="status">
+                        <option value="Available">Available</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-block">Add to Armory</button>
+            </div>
+        </form>
+    </div>
+</div>
+<% } %>
+
+<%- include('partials/shell-bottom') %>

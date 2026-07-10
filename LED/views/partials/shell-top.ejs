@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <title>LED | <%= pageTitle %></title>
+</head>
+<body>
+    <button class="sidebar-toggle btn btn-sm" aria-label="Toggle menu">&#9776;</button>
+    <div class="app-shell">
+        <%- include('sidebar', { active: typeof active !== 'undefined' ? active : '' }) %>
+
+        <div class="main-area">
+            <% if (typeof codeRed !== 'undefined' && codeRed && codeRed.active) { %>
+                <%- include('codered-banner') %>
+            <% } %>
+
+            <div class="topbar">
+                <div class="topbar-title"><%= pageTitle %></div>
+                <div class="topbar-right">
+                    <span class="topbar-clock" id="topbar-clock"></span>
+                    <% if (adminName) { %>
+                        <div class="operator-chip">
+                            <span class="dot"></span>
+                            <span class="op-name"><%= adminName %></span>
+                            <span class="pill <%= role === 'Admin' ? 'pill-admin' : 'pill-user' %>"><%= role %></span>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="content">
+                <%- include('flash') %>

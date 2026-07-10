@@ -1,0 +1,48 @@
+<%- include('partials/shell-top', { pageTitle: 'File Incident Report', active: 'reports' }) %>
+
+<section class="panel">
+    <h3 class="mt-0">File Incident Report</h3>
+
+    <form action="/reports" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-grid">
+            <div class="field full-width"><label>Title</label><input type="text" name="title" required></div>
+            <div class="field">
+                <label>Report Type</label>
+                <select name="report_type" required>
+                    <option value="Incident">Incident</option>
+                    <option value="Arrest">Arrest</option>
+                    <option value="Use of Force">Use of Force</option>
+                    <option value="Traffic Stop">Traffic Stop</option>
+                    <option value="Property">Property</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="field"><label>Date / Time Occurred</label><input type="datetime-local" name="occurred_at" required></div>
+            <div class="field full-width"><label>Location</label><input type="text" name="location" placeholder="Address / cross streets"></div>
+
+            <div class="field full-width">
+                <label>Involved Officers</label>
+                <div class="panel officer-checklist">
+                    <% officers.forEach(o => { %>
+                        <label class="checkbox-row">
+                            <input type="checkbox" name="involved_officers" value="<%= o.badge_number %>">
+                            <%= o.first_name %> <%= o.last_name %> (#<%= o.badge_number %>)
+                        </label>
+                    <% }); %>
+                </div>
+            </div>
+
+            <div class="field full-width">
+                <label>Narrative</label>
+                <textarea name="narrative" required minlength="10" placeholder="Full account of the incident..."></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">File Report</button>
+            <a class="btn btn-ghost" href="/reports">Cancel</a>
+        </div>
+    </form>
+</section>
+
+<%- include('partials/shell-bottom') %>

@@ -1,0 +1,28 @@
+<%- include('partials/shell-top', { pageTitle: 'Edit Equipment', active: 'equipment' }) %>
+
+<section class="panel">
+    <h3 class="mt-0">Edit &mdash; <%= item.item_name %> (<%= item.asset_tag %>)</h3>
+
+    <form action="/equipment/<%= item.asset_tag %>/edit" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-grid">
+            <div class="field"><label>Item Name</label><input type="text" name="item_name" value="<%= item.item_name %>" required></div>
+            <div class="field">
+                <label>Category</label>
+                <select name="category">
+                    <% ['Firearm', 'Vehicle', 'Comm Device', 'Protective Gear', 'Other'].forEach(c => { %>
+                        <option value="<%= c %>" <%= item.category === c ? 'selected' : '' %>><%= c %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="field"><label>Serial Number</label><input type="text" name="serial_number" value="<%= item.serial_number || '' %>"></div>
+            <div class="field"><label>Caliber</label><input type="text" name="caliber" value="<%= item.caliber || '' %>"></div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a class="btn btn-ghost" href="/equipment">Cancel</a>
+        </div>
+    </form>
+</section>
+
+<%- include('partials/shell-bottom') %>

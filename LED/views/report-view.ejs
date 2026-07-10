@@ -1,0 +1,49 @@
+<%- include('partials/shell-top', { pageTitle: report.report_number, active: 'reports' }) %>
+
+<div class="toolbar no-print mb-lg">
+    <button class="btn btn-sm" data-print>Print / Save as PDF</button>
+    <a class="btn btn-sm btn-ghost" href="/reports">Back to Reports</a>
+</div>
+
+<div class="report-doc">
+    <div class="report-number">Report #<%= report.report_number %></div>
+    <h1><%= report.title %></h1>
+    <span class="pill pill-<%= report.status.toLowerCase().replace(' ', '-') %>"><%= report.status %></span>
+
+    <div class="report-meta">
+        <div><div class="k">Type</div><div class="v"><%= report.report_type %></div></div>
+        <div><div class="k">Occurred</div><div class="v"><%= new Date(report.occurred_at).toLocaleString() %></div></div>
+        <div><div class="k">Location</div><div class="v"><%= report.location || '&mdash;' %></div></div>
+        <div><div class="k">Filed By</div><div class="v"><%= report.filed_by %></div></div>
+        <div><div class="k">Filed On</div><div class="v"><%= new Date(report.created_at).toLocaleString() %></div></div>
+    </div>
+
+    <h3>Involved Officers</h3>
+    <% if (involved.length === 0) { %>
+        <p class="empty-state">None tagged.</p>
+    <% } else { %>
+        <p>
+            <% involved.forEach((o, i) => { %><a href="/officers/<%= o.badge_number %>"><%= o.first_name %> <%= o.last_name %></a><%= i < involved.length - 1 ? ', ' : '' %><% }); %>
+        </p>
+    <% } %>
+
+    <h3>Narrative</h3>
+    <div class="narrative"><%= report.narrative %></div>
+</div>
+
+<% if (canManage) { %>
+    <section class="panel no-print">
+        <h3>Update Status</h3>
+        <form action="/reports/<%= report.id %>/status" method="POST" class="toolbar">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <select name="status">
+                <% statuses.forEach(s => { %>
+                    <option value="<%= s %>" <%= report.status === s ? 'selected' : '' %>><%= s %></option>
+                <% }); %>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+        </form>
+    </section>
+<% } %>
+
+<%- include('partials/shell-bottom') %>

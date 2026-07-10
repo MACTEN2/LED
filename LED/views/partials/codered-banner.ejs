@@ -1,0 +1,10 @@
+<div class="code-red-banner">
+    <div>
+        <strong>&#9888; CODE RED ACTIVE</strong>
+        &mdash; triggered by <%= codeRed.activatedBy %> at <%= new Date(codeRed.activatedAt).toLocaleTimeString() %>
+    </div>
+    <form action="/code-red/resolve" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn btn-sm">Resolve</button>
+    </form>
+</div>

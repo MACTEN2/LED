@@ -1,0 +1,42 @@
+<%- include('partials/shell-top', { pageTitle: 'Incident Reports', active: 'reports' }) %>
+
+<section class="panel">
+    <div class="panel-header">
+        <h3 class="mt-0">Filed Reports</h3>
+        <a class="btn btn-primary" href="/reports/new"><span>+</span> File New Report</a>
+    </div>
+
+    <form class="toolbar" method="GET" action="/reports">
+        <input type="text" name="q" value="<%= search %>" placeholder="Search title, report #, location...">
+        <select name="status">
+            <option value="">All Statuses</option>
+            <% statuses.forEach(s => { %>
+                <option value="<%= s %>" <%= status === s ? 'selected' : '' %>><%= s %></option>
+            <% }); %>
+        </select>
+        <button type="submit" class="btn btn-sm">Filter</button>
+    </form>
+
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Report #</th><th>Title</th><th>Type</th><th>Occurred</th><th>Filed By</th><th>Status</th></tr></thead>
+            <tbody>
+                <% if (reports.length === 0) { %>
+                    <tr><td colspan="6" class="empty-state">No reports match this search.</td></tr>
+                <% } %>
+                <% reports.forEach(r => { %>
+                    <tr>
+                        <td><a href="/reports/<%= r.id %>"><%= r.report_number %></a></td>
+                        <td><%= r.title %></td>
+                        <td><%= r.report_type %></td>
+                        <td><%= new Date(r.occurred_at).toLocaleString() %></td>
+                        <td><%= r.filed_by %></td>
+                        <td><span class="pill pill-<%= r.status.toLowerCase().replace(' ', '-') %>"><%= r.status %></span></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<%- include('partials/shell-bottom') %>
