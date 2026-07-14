@@ -28,7 +28,11 @@ router.get('/equipment', isAuthenticated, async (req, res) => {
 
     try {
         const [inventory] = await db.execute(
-            `SELECT * FROM equipment_inventory ${whereSql} ORDER BY item_name ASC`,
+            `SELECT ei.*, o.first_name AS assigned_first_name, o.last_name AS assigned_last_name
+             FROM equipment_inventory ei
+             LEFT JOIN officers o ON o.badge_number = ei.assigned_to
+             ${whereSql}
+             ORDER BY ei.item_name ASC`,
             params
         );
         res.render('equipment', { inventory, search, status });
@@ -86,13 +90,58 @@ router.get('/equipment/:tag/edit', isAuthenticated, requireAdmin, async (req, re
 });
 
 router.post('/equipment/:tag/edit', isAuthenticated, requireAdmin, async (req, res) => {
-    const { item_name, category, serial_number, caliber } = req.body;
+    const { item_name, category, serial_number, caliber, assigned_to } = req.body;
+    const badge = (assigned_to || '').trim();
+
     try {
+        const [[item]] = await db.execute('SELECT * FROM equipment_inventory WHERE asset_tag = ?', [req.params.tag]);
+        if (!item) {
+            setFlash(req, 'error', 'Item not found.');
+            return res.redirect('/equipment');
+        }
+
+        if (badge && !/^\d+$/.test(badge)) {
+            setFlash(req, 'error', 'Badge number must be numeric.');
+            return res.redirect(`/equipment/${req.params.tag}/edit`);
+        }
+
+        let newBadge = badge ? Number(badge) : null;
+
+        if (newBadge) {
+            const [[officer]] = await db.execute('SELECT badge_number FROM officers WHERE badge_number = ?', [newBadge]);
+            if (!officer) {
+                setFlash(req, 'error', `No officer found with badge #${newBadge}.`);
+                return res.redirect(`/equipment/${req.params.tag}/edit`);
+            }
+        }
+
+        const oldBadge = item.assigned_to;
+        const newStatus = item.status === 'Maintenance' ? 'Maintenance' : (newBadge ? 'Deployed' : 'Available');
+
         await db.execute(
-            `UPDATE equipment_inventory SET item_name = ?, category = ?, serial_number = ?, caliber = ?
+            `UPDATE equipment_inventory SET item_name = ?, category = ?, serial_number = ?, caliber = ?,
+                assigned_to = ?, status = ?
              WHERE asset_tag = ?`,
-            [item_name, category || null, serial_number || null, caliber || null, req.params.tag]
+            [item_name, category || null, serial_number || null, caliber || null, newBadge, newStatus, req.params.tag]
         );
+
+        if (oldBadge !== newBadge) {
+            if (oldBadge) {
+                await db.execute(
+                    `UPDATE weapon_checkouts SET checked_in_at = CURRENT_TIMESTAMP
+                     WHERE equipment_id = ? AND officer_badge = ? AND checked_in_at IS NULL`,
+                    [item.id, oldBadge]
+                );
+            }
+            if (newBadge) {
+                await db.execute(
+                    'INSERT INTO weapon_checkouts (equipment_id, officer_badge, notes) VALUES (?, ?, ?)',
+                    [item.id, newBadge, `Assigned by ${req.session.adminName}`]
+                );
+            }
+            await auditLog.record('EQUIPMENT_REASSIGNED', `${req.session.adminName} ${newBadge ? `assigned ${item.item_name} (${item.asset_tag}) to badge #${newBadge}` : `unassigned ${item.item_name} (${item.asset_tag})`}.`);
+        }
+
         await auditLog.record('EQUIPMENT_UPDATED', `${req.session.adminName} updated ${req.params.tag}.`);
         setFlash(req, 'success', 'Item updated.');
         res.redirect('/equipment');
@@ -117,7 +166,7 @@ router.post('/equipment/:tag/checkout', isAuthenticated, async (req, res) => {
 
         await db.execute(
             'UPDATE equipment_inventory SET status = ?, assigned_to = ? WHERE asset_tag = ?',
-            ['Deployed', req.session.adminName, req.params.tag]
+            ['Deployed', req.session.userId, req.params.tag]
         );
         await db.execute(
             'INSERT INTO weapon_checkouts (equipment_id, officer_badge) VALUES (?, ?)',
@@ -146,7 +195,7 @@ router.post('/equipment/:tag/checkin', isAuthenticated, async (req, res) => {
             ['Available', req.params.tag]
         );
         await db.execute(
-            `UPDATE weapon_checkouts SET checked_in_at = NOW()
+            `UPDATE weapon_checkouts SET checked_in_at = CURRENT_TIMESTAMP
              WHERE equipment_id = ? AND officer_badge = ? AND checked_in_at IS NULL`,
             [item.id, req.session.userId]
         );
@@ -164,7 +213,7 @@ router.post('/equipment/:tag/maintenance', isAuthenticated, requireAdmin, async 
     const { notes } = req.body;
     try {
         await db.execute(
-            `UPDATE equipment_inventory SET status = 'Maintenance', assigned_to = NULL, last_inspected_at = CURDATE()
+            `UPDATE equipment_inventory SET status = 'Maintenance', assigned_to = NULL, last_inspected_at = DATE('now')
              WHERE asset_tag = ?`,
             [req.params.tag]
         );

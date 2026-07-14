@@ -35,7 +35,14 @@
                         <td><%= item.category || '&mdash;' %></td>
                         <td><%= item.serial_number || '&mdash;' %></td>
                         <td><span class="pill pill-<%= item.status.toLowerCase() %>"><%= item.status %></span></td>
-                        <td><%= item.assigned_to || '&mdash;' %></td>
+                        <td>
+                            <% if (item.assigned_to) { %>
+                                <a href="/officers/<%= item.assigned_to %>"><%= item.assigned_first_name %> <%= item.assigned_last_name %></a>
+                                <span class="text-muted">(#<%= item.assigned_to %>)</span>
+                            <% } else { %>
+                                &mdash;
+                            <% } %>
+                        </td>
                         <td>
                             <% if (item.status === 'Available') { %>
                                 <form action="/equipment/<%= item.asset_tag %>/checkout" method="POST">

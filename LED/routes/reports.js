@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const db = require('../db');
@@ -72,10 +73,11 @@ router.post('/reports',
         try {
             await conn.beginTransaction();
 
+            const tempNumber = `TMP-${crypto.randomUUID()}`;
             const [result] = await conn.execute(
                 `INSERT INTO incident_reports (report_number, report_type, title, narrative, location, occurred_at, filed_by, status)
-                 VALUES (CONCAT('TMP-', UUID()), ?, ?, ?, ?, ?, ?, 'Open')`,
-                [report_type, title, narrative, location || null, occurred_at, req.session.adminName]
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Open')`,
+                [tempNumber, report_type, title, narrative, location || null, occurred_at, req.session.adminName]
             );
 
             const reportId = result.insertId;
@@ -145,7 +147,10 @@ router.post('/reports/:id/status', isAuthenticated, async (req, res) => {
             return res.status(403).render('403', { adminName: req.session.adminName });
         }
 
-        await db.execute('UPDATE incident_reports SET status = ? WHERE id = ?', [status, req.params.id]);
+        await db.execute(
+            'UPDATE incident_reports SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [status, req.params.id]
+        );
         await auditLog.record('REPORT_STATUS_CHANGED', `${req.session.adminName} set report #${req.params.id} to ${status}.`);
         setFlash(req, 'success', `Report marked ${status}.`);
         res.redirect(`/reports/${req.params.id}`);

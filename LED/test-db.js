@@ -1,18 +1,12 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
+const db = require('./db');
 
-async function test() {
+(async () => {
     try {
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME
-        });
-        console.log("✅ [SYSTEM] CONNECTION SUCCESSFUL. DATABASE FOUND.");
-        await connection.end();
+        const [rows] = await db.execute("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name");
+        console.log('✅ [SYSTEM] CONNECTION SUCCESSFUL. Tables found:');
+        rows.forEach((r) => console.log(`   - ${r.name}`));
     } catch (err) {
-        console.error("❌ [SYSTEM] DATABASE NOT FOUND:", err.message);
+        console.error('❌ [SYSTEM] DATABASE ERROR:', err.message);
+        process.exitCode = 1;
     }
-}
-test();
+})();

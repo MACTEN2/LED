@@ -33,10 +33,10 @@ const DEMO = {
                  work_email, officer_rank, hire_date, unit_division, duty_status,
                  password_hash, role, created_by)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-                password_hash = VALUES(password_hash),
-                role = VALUES(role),
-                duty_status = VALUES(duty_status)`,
+             ON CONFLICT(badge_number) DO UPDATE SET
+                password_hash = excluded.password_hash,
+                role = excluded.role,
+                duty_status = excluded.duty_status`,
             [
                 DEMO.badge_number, DEMO.post_id, DEMO.first_name, DEMO.last_name,
                 DEMO.agency_name, DEMO.dob, DEMO.work_email, DEMO.officer_rank,

@@ -2,3 +2,9 @@ node_modules/
 .env
 .DS_Store
 *.log
+
+# SQLite database file — contains real password hashes and officer PII,
+# never commit actual data. The schema (db/sqlite/*.sql) stays tracked.
+*.db
+*.db-shm
+*.db-wal
